@@ -1,6 +1,7 @@
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Step;
+import io.restassured.response.Response;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -29,11 +30,13 @@ public class OrderCreateTest extends BaseTest {
     public void orderCanBeCreatedWithColor() {
         String requestBody = color != null ? "{ \"color\": [\"" + color + "\"] }" : "{}";
 
-        given()
-                .header("Content-Type", "application/json")
+        Response response = given()
+                .spec(requestSpec)
                 .body(requestBody)
-                .post("/api/v1/orders")
-                .then()
+                .when()
+                .post("/api/v1/orders");
+
+        response.then()
                 .statusCode(201)
                 .body("track", notNullValue());
     }

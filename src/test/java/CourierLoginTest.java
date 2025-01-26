@@ -2,6 +2,7 @@ import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import models.Courier;
 import models.CourierCredentials;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -9,12 +10,13 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.notNullValue;
 
 public class CourierLoginTest extends BaseTest {
-    private final String login = "testCourier";
+    private final String login = "testCourier_" + System.currentTimeMillis();
     private final String password = "password123";
 
     @Before
     @Step("Создаём курьера перед авторизацией")
     public void setUp() {
+        deleteCourierIfExists(login, password);
         Courier courier = new Courier(login, password, "TestName");
         given()
                 .spec(requestSpec)
@@ -36,6 +38,9 @@ public class CourierLoginTest extends BaseTest {
                 .post("/api/v1/courier/login");
         response.then().statusCode(200).body("id", notNullValue());
     }
+
+    @After
+    public void tearDown() {
+        deleteCourierIfExists(login, password);
+    }
 }
-
-

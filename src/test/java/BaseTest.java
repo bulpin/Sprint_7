@@ -1,9 +1,12 @@
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import models.CourierCredentials;
 import org.junit.BeforeClass;
 
 import static io.restassured.RestAssured.baseURI;
+import static io.restassured.RestAssured.given;
 
 public abstract class BaseTest {
     protected static RequestSpecification requestSpec;
@@ -16,5 +19,28 @@ public abstract class BaseTest {
                 .setBaseUri(baseURI)
                 .setContentType("application/json")
                 .build();
+    }
+
+    protected void deleteCourierIfExists(String login, String password) {
+        CourierCredentials credentials = new CourierCredentials(login, password);
+        Response response = given()
+                .spec(requestSpec)
+                .body(credentials)
+                .when()
+                .post("/api/v1/courier/login");
+
+        if (response.statusCode() == 200) {
+            int courierId = response.then().extract().path("id");
+            deleteCourier(courierId);
+        }
+    }
+
+    protected void deleteCourier(int id) {
+        given()
+                .spec(requestSpec)
+                .when()
+                .delete("/api/v1/courier/" + id)
+                .then()
+                .statusCode(200);
     }
 }

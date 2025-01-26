@@ -2,6 +2,7 @@ import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import models.Courier;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import static io.restassured.RestAssured.given;
@@ -9,11 +10,18 @@ import static org.hamcrest.Matchers.equalTo;
 
 public class CourierCreateTest extends BaseTest {
     private int courierId;
+    private String uniqueLogin;
+
+    @Before
+    public void setUp() {
+        uniqueLogin = "testCourier_" + System.currentTimeMillis();
+        deleteCourierIfExists(uniqueLogin, "password123");
+    }
 
     @Test
     @Step("Проверяем создание курьера")
     public void courierCanBeCreated() {
-        Courier courier = new Courier("testCourier", "password123", "TestName");
+        Courier courier = new Courier(uniqueLogin, "password123", "TestName");
         Response response = createCourier(courier);
         response.then().statusCode(201).body("ok", equalTo(true));
         courierId = response.then().extract().path("id");
@@ -33,15 +41,5 @@ public class CourierCreateTest extends BaseTest {
                 .body(courier)
                 .when()
                 .post("/api/v1/courier");
-    }
-
-    @Step("Удаляем курьера")
-    private void deleteCourier(int id) {
-        given()
-                .spec(requestSpec)
-                .when()
-                .delete("/api/v1/courier/" + id)
-                .then()
-                .statusCode(200);
     }
 }
