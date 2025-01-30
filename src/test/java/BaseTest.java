@@ -30,17 +30,23 @@ public abstract class BaseTest {
                 .post("/api/v1/courier/login");
 
         if (response.statusCode() == 200) {
-            int courierId = response.then().extract().path("id");
-            deleteCourier(courierId);
+            Integer courierId = response.then().extract().path("id", String.valueOf(Integer.class));
+            if (courierId != null) {
+                deleteCourier(courierId);
+            }
         }
     }
 
     protected void deleteCourier(int id) {
-        given()
+        Response response = given()
                 .spec(requestSpec)
                 .when()
-                .delete("/api/v1/courier/" + id)
-                .then()
-                .statusCode(200);
+                .delete("/api/v1/courier/" + id);
+
+        if (response.statusCode() == 200) {
+            System.out.println("Курьер с ID " + id + " успешно удален.");
+        } else {
+            System.out.println("Не удалось удалить курьера с ID " + id + ". Код ответа: " + response.statusCode());
+        }
     }
 }

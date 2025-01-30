@@ -14,21 +14,26 @@ import static org.hamcrest.Matchers.notNullValue;
 @RunWith(Parameterized.class)
 public class OrderCreateTest extends BaseTest {
 
-    private final String color;
+    private final String[] colors;
 
-    public OrderCreateTest(String color) {
-        this.color = color;
+    public OrderCreateTest(String[] colors) {
+        this.colors = colors;
     }
 
     @Parameterized.Parameters
     public static Object[] colors() {
-        return new Object[]{"BLACK", "GREY", null};
+        return new Object[]{
+                new String[]{"BLACK"},
+                new String[]{"GREY"},
+                new String[]{"BLACK", "GREY"},
+                new String[]{}
+        };
     }
 
     @Test
-    @Step("Создать заказ с цветом: {0}")
+    @Step("Создать заказ с цветами: {0}")
     public void orderCanBeCreatedWithColor() {
-        String requestBody = color != null ? "{ \"color\": [\"" + color + "\"] }" : "{}";
+        String requestBody = colors.length > 0 ? "{ \"color\": [\"" + String.join("\", \"", colors) + "\"] }" : "{}";
 
         Response response = given()
                 .spec(requestSpec)
