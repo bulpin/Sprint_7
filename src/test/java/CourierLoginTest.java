@@ -5,31 +5,37 @@ import models.CourierCredentials;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 public class CourierLoginTest extends BaseTest {
-    private String login;
-    private final String password = "password123";
     private int courierId;
+    private final String login = "testCourier_" + System.currentTimeMillis();
+    private final String password = "password123";
 
     @Before
     @Step("Создаём курьера перед авторизацией")
     public void setUp() {
-        login = "testCourier_" + System.currentTimeMillis();
         deleteCourierIfExists(login, password);
         Courier courier = new Courier(login, password, "TestName");
         Response response = createCourier(courier);
         response.then().statusCode(201);
-        courierId = response.then().extract().path("id", String.valueOf(Integer.class));
+
+        Integer id = response.then().extract().path("id"); // Исправлено
+        if (id != null) {
+            courierId = id;
+        }
     }
 
     @Test
     @Step("Проверяем авторизацию курьера")
     public void courierCanLogin() {
         CourierCredentials credentials = new CourierCredentials(login, password);
-        Response response = loginCourier(credentials);
+        Response response = given()
+                .spec(requestSpec)
+                .body(credentials)
+                .when()
+                .post("/api/v1/courier/login");
         response.then().statusCode(200).body("id", notNullValue());
     }
 
@@ -49,13 +55,13 @@ public class CourierLoginTest extends BaseTest {
 
     @After
     public void tearDown() {
-        if (courierId != 0) {
+        if (courierId > 0) {
             deleteCourier(courierId);
         }
     }
 
     @Step("Создаём курьера")
-    private Response createCourier(Courier courier) {
+    public Response createCourier(Courier courier) {
         return given()
                 .spec(requestSpec)
                 .body(courier)
@@ -64,7 +70,7 @@ public class CourierLoginTest extends BaseTest {
     }
 
     @Step("Логиним курьера")
-    private Response loginCourier(CourierCredentials credentials) {
+    public Response loginCourier(CourierCredentials credentials) {
         return given()
                 .spec(requestSpec)
                 .body(credentials)

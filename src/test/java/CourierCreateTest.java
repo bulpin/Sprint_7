@@ -19,13 +19,17 @@ public class CourierCreateTest extends BaseTest {
     }
 
     @Test
-    @Step("Курьера можно создать")
+    @Step("Проверяем создание курьера")
     public void courierCanBeCreated() {
         Courier courier = new Courier(uniqueLogin, "password123", "TestName");
         Response response = createCourier(courier);
         response.then().statusCode(201).body("ok", equalTo(true));
-        courierId = response.then().extract().path("id", String.valueOf(Integer.class));
+        Integer id = response.then().extract().path("id");
+        if (id != null) {
+            courierId = id;
+        }
     }
+
 
     @Test
     @Step("Нельзя создать двух одинаковых курьеров")
@@ -50,7 +54,7 @@ public class CourierCreateTest extends BaseTest {
     }
 
     @Step("Создаём курьера")
-    private Response createCourier(Courier courier) {
+    public Response createCourier(Courier courier) {
         return given()
                 .spec(requestSpec)
                 .body(courier)

@@ -2,6 +2,7 @@ import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import models.Courier;
 import models.CourierCredentials;
 import org.junit.BeforeClass;
 
@@ -13,12 +14,20 @@ public abstract class BaseTest {
 
     @BeforeClass
     public static void setUpClass() {
-        baseURI = "https://qa-scooter.praktikum-services.ru";
+        baseURI = "http://qa-scooter.praktikum-services.ru"; // Исправлено с https на http
         requestSpec = new RequestSpecBuilder()
                 .addFilter(new AllureRestAssured())
                 .setBaseUri(baseURI)
                 .setContentType("application/json")
                 .build();
+    }
+
+    protected Response createCourier(Courier courier) {
+        return given()
+                .spec(requestSpec)
+                .body(courier)
+                .when()
+                .post("/api/v1/courier");
     }
 
     protected void deleteCourierIfExists(String login, String password) {
@@ -30,23 +39,19 @@ public abstract class BaseTest {
                 .post("/api/v1/courier/login");
 
         if (response.statusCode() == 200) {
-            Integer courierId = response.then().extract().path("id", String.valueOf(Integer.class));
-            if (courierId != null) {
-                deleteCourier(courierId);
+            Integer id = response.then().extract().path("id");
+            if (id != null) {
+                deleteCourier(id);
             }
         }
     }
 
     protected void deleteCourier(int id) {
-        Response response = given()
+        given()
                 .spec(requestSpec)
                 .when()
-                .delete("/api/v1/courier/" + id);
-
-        if (response.statusCode() == 200) {
-            System.out.println("Курьер с ID " + id + " успешно удален.");
-        } else {
-            System.out.println("Не удалось удалить курьера с ID " + id + ". Код ответа: " + response.statusCode());
-        }
+                .delete("/api/v1/courier/" + id)
+                .then()
+                .statusCode(200);
     }
 }
