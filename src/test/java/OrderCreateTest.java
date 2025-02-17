@@ -6,6 +6,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -21,19 +24,21 @@ public class OrderCreateTest extends BaseTest {
     }
 
     @Parameterized.Parameters
-    public static Object[] colors() {
-        return new Object[]{
-                new String[]{"BLACK"},
-                new String[]{"GREY"},
-                new String[]{"BLACK", "GREY"},
-                new String[]{}
-        };
+    public static Collection<Object[]> colors() {
+        return Arrays.asList(new Object[][]{
+                {new String[]{"BLACK"}},
+                {new String[]{"GREY"}},
+                {new String[]{"BLACK", "GREY"}},
+                {new String[]{}}
+        });
     }
 
     @Test
     @Step("Создать заказ с цветами: {0}")
     public void orderCanBeCreatedWithColor() {
-        String requestBody = colors.length > 0 ? "{ \"color\": [\"" + String.join("\", \"", colors) + "\"] }" : "{}";
+        String requestBody = colors != null && colors.length > 0
+                ? "{ \"color\": [\"" + String.join("\", \"", colors) + "\"] }"
+                : "{}";
 
         Response response = given()
                 .spec(requestSpec)
